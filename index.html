@@ -560,12 +560,17 @@
             <div class="slider-card std-card">
                 <div class="slider-top">
                     <span class="slider-name"><span id="ksl-lambda"></span> &mdash; diversity bonus weight <span class="tag tag-std">std-RL</span></span>
-                    <span class="slider-val" id="val-lambda">1.00</span>
+                    <span class="slider-val" id="val-lambda">0.50</span>
                 </div>
-                <input type="range" id="slider-lambda" min="0" max="4" step="0.05" value="1">
+                <input type="range" id="slider-lambda" min="0" max="4" step="0.05" value="0.5">
                 <div class="slider-desc">
                     Coefficient on the diversity bonus r&#771;(x,y) = r(x,y) + &lambda;&thinsp;&middot;&thinsp;d(x,y).
                     Controls the tilt of the advantage plane along the d(y) axis.
+                </div>
+                <div class="slider-desc" style="margin-top:0.4em;">
+                    Default value is 0.5, which is the maximum weight used in prior works
+                    [<a href="https://arxiv.org/pdf/2509.06941" target="_blank" rel="noopener">1</a>,
+                    <a href="https://arxiv.org/pdf/2510.11686" target="_blank" rel="noopener">2</a>].
                 </div>
             </div>
 
