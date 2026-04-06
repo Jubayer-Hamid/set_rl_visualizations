@@ -49,19 +49,28 @@
             border-radius: 8px;
             overflow: hidden;
         }
-        .plot-header { padding: 16px 20px 4px; }
-        .plot-title {
-            font-size: 1rem;
-            color: #e0e0e0;
+        .plot-dark-title {
+            padding: 16px 24px 14px;
+            font-size: 1.05rem;
             font-weight: bold;
+            color: #f0f0f0;
+            letter-spacing: 0.2px;
         }
-        .plot-formula {
-            margin-top: 6px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.77rem;
-            color: #6688bb;
-            line-height: 1.6;
+        .plot-latex-header {
+            background: #ffffff;
+            padding: 20px 24px 16px;
+            overflow: hidden;
+            font-size: 0.72rem;
         }
+        .plot-latex-title {
+            font-size: 0.82rem;
+            font-weight: bold;
+            color: #333;
+            font-family: 'Georgia', serif;
+            margin-bottom: 10px;
+        }
+        .plot-latex-header .katex { color: #000 !important; }
+        .plot-latex-header .katex * { color: #000 !important; }
         .plot-div {
             width: 100%;
             height: 480px;
@@ -214,29 +223,6 @@
         .hlr { color: #cc7060; }
         .mono { font-family: 'Courier New', monospace; font-size: 0.84em; }
 
-        /* ── LaTeX formula section ── */
-        .latex-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            padding: 0 52px 48px;
-        }
-        .latex-card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 28px 32px 24px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.4);
-        }
-        .latex-card-title {
-            font-size: 0.82rem;
-            font-weight: bold;
-            color: #333;
-            letter-spacing: 0.3px;
-            margin-bottom: 18px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            font-family: 'Georgia', serif;
-        }
         .latex-n {
             font-weight: normal;
             color: #888;
@@ -259,13 +245,10 @@
             margin: 0;
             font-size: 0.9em;
         }
-        .latex-card .katex { color: #000 !important; }
-        .latex-card .katex * { color: #000 !important; }
-
         @media (max-width: 960px) {
             .plots-row, .sliders-methods, .latex-section { grid-template-columns: 1fr; }
             .sliders-shared { grid-template-columns: 1fr; }
-            header, .controls-section, .latex-section, .axis-legend { padding-left: 20px; padding-right: 20px; }
+            header, .controls-section, .axis-legend { padding-left: 20px; padding-right: 20px; }
             .plots-row { padding-left: 20px; padding-right: 20px; }
         }
     </style>
@@ -273,24 +256,25 @@
 <body>
 
 <header>
-    <h1>Set-RL vs Standard-RL &mdash; Marginal Advantage Landscape</h1>
+    <h1>Polychromic Objective with Set RL versus Diversity Bonus with Standard RL</h1>
 </header>
 
 <div class="plots-row">
     <div class="plot-card">
-        <div class="plot-header">
-            <div class="plot-title">Set-RL &mdash; Polychromic Marginal Advantage</div>
-            <div class="plot-formula">A<sub>set</sub> = (¼·r(y) + ¾·p)·d(y) &minus; p·d
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ ¾·Cov(y) &minus; Cov<sub>1:n</sub></div>
+        <div class="plot-dark-title">Set RL with Polychromic Objective</div>
+        <div class="plot-latex-header">
+            <div class="plot-latex-title">Marginal Advantage &nbsp;<span class="latex-n">(n = 4)</span></div>
+            <div id="katex-set" class="katex-display-block"></div>
+            <div id="katex-set-notation" class="katex-notation"></div>
         </div>
         <div id="plot-set" class="plot-div"></div>
     </div>
     <div class="plot-card">
-        <div class="plot-header">
-            <div class="plot-title">Standard-RL &mdash; Advantage with Diversity Bonus</div>
-            <div class="plot-formula">A<sub>std</sub> = r(y) &minus; p + &lambda;&thinsp;·&thinsp;(d(y) &minus; d)
-&nbsp;
-&nbsp;</div>
+        <div class="plot-dark-title">Standard RL with Exploration Bonus</div>
+        <div class="plot-latex-header">
+            <div class="plot-latex-title">Advantage</div>
+            <div id="katex-std" class="katex-display-block"></div>
+            <div id="katex-std-notation" class="katex-notation"></div>
         </div>
         <div id="plot-std" class="plot-div"></div>
     </div>
@@ -392,21 +376,6 @@
     </div>
 </div>
 
-<div class="latex-section">
-
-    <div class="latex-card">
-        <div class="latex-card-title">Set-RL &mdash; Polychromic Marginal Advantage &nbsp;<span class="latex-n">(n = 4)</span></div>
-        <div id="katex-set" class="katex-display-block"></div>
-        <div id="katex-set-notation" class="katex-notation"></div>
-    </div>
-
-    <div class="latex-card">
-        <div class="latex-card-title">Standard-RL &mdash; Advantage with Diversity Bonus</div>
-        <div id="katex-std" class="katex-display-block"></div>
-        <div id="katex-std-notation" class="katex-notation"></div>
-    </div>
-
-</div>
 
 <script>
 const N = 4;
@@ -710,6 +679,14 @@ render();
 const OPT = { throwOnError: false };
 const OPT_DISPLAY = { throwOnError: false, displayMode: true };
 
+// ── Equalise the two white latex header blocks ───────────────────────────────
+function equalizeLatexHeaders() {
+    const headers = document.querySelectorAll('.plot-latex-header');
+    headers.forEach(h => { h.style.height = ''; });          // reset first
+    const maxH = Math.max(...Array.from(headers).map(h => h.offsetHeight));
+    headers.forEach(h => { h.style.height = maxH + 'px'; });
+}
+
 // Set-RL marginal advantage (n=4)
 katex.render(String.raw`
     A_{\mathrm{marg}}^{\sharp}(x,\, y;\; f_{\mathrm{poly}},\, \theta^k)
@@ -722,11 +699,11 @@ katex.render(String.raw`
 
 katex.render(String.raw`
     \begin{aligned}
-    &p := \mathbb{E}_Y[r(x,Y)], \quad
-     d(y) := \mathbb{E}_{Y_{2:n}}[d(x,y,Y_{2:n})], \quad
-     d := \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})]\\[4pt]
-    &\mathrm{Cov}(y) := \mathrm{Cov}_{Y_{2:n}}\!\left(r(x,Y_2),\, d(x,y,Y_{2:n})\right), \quad
-     \mathrm{Cov}_{1:n} := \mathrm{Cov}_{Y_{1:n}}\!\left(r(x,Y_1),\, d(x,Y_{1:n})\right)
+    &p &&:= \mathbb{E}_Y[r(x,Y)] &&\quad \small\text{average reward of the model}\\[4pt]
+    &d(y) &&:= \mathbb{E}_{Y_{2:n}}[d(x,y,Y_{2:n})] &&\quad \small\text{expected diversity contribution of } y\\[4pt]
+    &d &&:= \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})] &&\quad \small\text{expected diversity of a random set}\\[4pt]
+    &\mathrm{Cov}(y) &&:= \mathrm{Cov}_{Y_{2:n}}\!\left(r(x,Y_2),\, d(x,y,Y_{2:n})\right) &&\quad \small\text{reward–diversity covariance for sets containing } y\\[4pt]
+    &\mathrm{Cov}_{1:n} &&:= \mathrm{Cov}_{Y_{1:n}}\!\left(r(x,Y_1),\, d(x,Y_{1:n})\right) &&\quad \small\text{reward–diversity covariance for random sets}
     \end{aligned}
 `, document.getElementById('katex-set-notation'), OPT_DISPLAY);
 
@@ -740,10 +717,16 @@ katex.render(String.raw`
 `, document.getElementById('katex-std'), OPT_DISPLAY);
 
 katex.render(String.raw`
-    \tilde{r}(x,y) = r(x,y) + \lambda \cdot d(x,y), \qquad
-    \mathbb{E}_Y[d(x,Y)] = \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})] = d
-    \;\text{(by iterated expectation)}
+    \begin{aligned}
+    &\tilde{r}(x,y) &&= r(x,y) + \lambda \cdot d(x,y) &&\quad \small\text{augmented reward with diversity bonus}\\[4pt]
+    &p &&:= \mathbb{E}_Y[r(x,Y)] &&\quad \small\text{average reward of the model}\\[4pt]
+    &d(y) &&:= \mathbb{E}_{Y_{2:n}}[d(x,y,Y_{2:n})] &&\quad \small\text{expected diversity contribution of } y\\[4pt]
+    &d &&:= \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})] = \mathbb{E}_Y[d(x,Y)] &&\quad \small\text{expected diversity of a random set}
+    \end{aligned}
 `, document.getElementById('katex-std-notation'), OPT_DISPLAY);
+
+equalizeLatexHeaders();
+window.addEventListener('resize', equalizeLatexHeaders);
 </script>
 </body>
 </html>
