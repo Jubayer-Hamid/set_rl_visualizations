@@ -325,6 +325,10 @@
         .desc-full-width:last-of-type {
             margin-bottom: 28px;
         }
+        .desc-note {
+            color: #666 !important;
+            font-style: italic;
+        }
         .desc-two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -383,9 +387,9 @@
 
 <header>
     <h1>
-        Polychromic Objective with Set RL
+        Set RL with Polychromic Objective
         <span class="versus">versus</span>
-        Diversity Bonus with Standard RL
+        Standard RL with Diversity Bonus
     </h1>
 </header>
 
@@ -407,6 +411,9 @@
         is that Set RL evaluates generations <em>collectively</em> — all generations within a set are
         coupled under a shared set score, so each generation's value depends on the others it appears
         alongside. Standard RL, by contrast, scores each generation in isolation.
+    </p>
+    <p class="desc-full-width desc-note">
+        Throughout this visualization, we fix the set size to <span id="kleg-n"></span>.
     </p>
 
     <div class="desc-two-col">
@@ -930,6 +937,8 @@ katex.render(String.raw`p = \mathbb{E}_Y[r(x,Y)]`,
     document.getElementById('kleg-p'), OPT_INLINE);
 katex.render(String.raw`d(y) = \mathbb{E}_{Y_{2:n}}[d(x,y,Y_{2:n})]`,
     document.getElementById('kleg-dy'), OPT_INLINE);
+katex.render(String.raw`n = 4`,
+    document.getElementById('kleg-n'), OPT_INLINE);
 
 // ── Objectives in description section ────────────────────────────────────────
 katex.render(String.raw`
