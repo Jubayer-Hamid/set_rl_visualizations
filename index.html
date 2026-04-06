@@ -265,6 +265,9 @@
             font-size: 0.9rem;
             color: #aaa;
             line-height: 1.85;
+            margin-bottom: 18px;
+        }
+        .desc-full-width:last-of-type {
             margin-bottom: 28px;
         }
         .desc-two-col {
@@ -277,7 +280,7 @@
             font-size: 0.88rem;
             color: #aaa;
             line-height: 1.85;
-            margin-top: 0;
+            margin: 0;
         }
         .desc-col-label {
             font-size: 0.72rem;
@@ -293,6 +296,20 @@
             margin: 4px 0 2px;
             font-size: 0.85rem;
         }
+        .desc-bullets {
+            margin: 8px 0 0 18px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .desc-bullets li {
+            font-size: 0.88rem;
+            color: #aaa;
+            line-height: 1.85;
+        }
+        .desc-bullets li strong { color: #ddd; }
+        .desc-bullets li em { color: #bbb; }
 
         @media (max-width: 960px) {
             .plots-row, .sliders-methods, .desc-two-col { grid-template-columns: 1fr; }
@@ -316,7 +333,10 @@
         exploration–exploitation tradeoff during training. The central quantity we plot is the
         <strong>advantage</strong> assigned to a fixed generation <em>y</em> under each framework —
         positive values mean <em>y</em> gains probability mass under the next policy update, negative
-        values mean it loses it. In <strong>Set RL</strong>, this is the <em>marginal advantage</em>:
+        values mean it loses it.
+    </p>
+    <p class="desc-full-width">
+        In <strong>Set RL</strong>, this is the <em>marginal advantage</em>:
         a measure of the expected score of all sets containing <em>y</em>, minus the average score of
         all sets. In <strong>Standard RL</strong>, this is the classical <em>advantage</em>: the score
         of <em>y</em> itself minus the average score of all generations. The key conceptual difference
@@ -332,24 +352,20 @@
         <div id="katex-obj-set" class="desc-formula"></div>
         <div id="katex-obj-std" class="desc-formula"></div>
 
-        <p>
-            The polychromic objective evaluates generations through the lens of the sets they belong to.
-            This leads to two distinctive properties. First, it can increase the probability of
-            <strong>exploratory but failed generations</strong> — even when <em>r(y) = 0</em>, a generation
-            that meaningfully diversifies the set of outputs can receive a positive marginal advantage,
-            provided its diversity contribution <em>d(y)</em> exceeds the baseline by a sufficient margin.
-            Second, the advantage has a <strong>multiplicative structure</strong>: it explicitly rewards
-            generations that help align exploration and exploitation within sets. The higher the model's
-            average reward <em>p</em>, the more it benefits from diverse generations — the two reinforce
-            each other, producing the curved surface in the left plot.
-        </p>
-        <p>
-            The diversity bonus objective treats reward and diversity as independent, additive quantities.
-            A generation's advantage is simply its reward surplus plus a weighted diversity surplus.
-            This produces a flat, tilted plane: the two objectives never interact, and a higher average
-            reward <em>p</em> always works against any low-reward generation, regardless of how much
-            diversity it contributes.
-        </p>
+        <div>
+            <p>The polychromic objective evaluates generations through the lens of the sets they belong to. This leads to two distinctive properties.</p>
+            <ul class="desc-bullets">
+                <li>It can increase the probability of <strong>exploratory but failed generations</strong> (i.e. when <em>r</em>(<em>x</em>, <em>y</em>) = 0), if it contributes diversity to sets and there are other generations in the sets that can contribute reward instead.</li>
+                <li>The marginal advantage explicitly depends on whether a generation allows the model to <strong>align the two objectives — exploitation and exploration</strong>. If the presence of a generation in a set allows the model to better align these two goals, it receives a positive update even if it is a failed generation.</li>
+            </ul>
+        </div>
+        <div>
+            <p>The diversity bonus objective treats reward and diversity as independent, additive quantities.</p>
+            <ul class="desc-bullets">
+                <li>The objective strongly depends on the hyperparameter <em>&lambda;</em> that weighs these two goals.</li>
+                <li>The standard RL advantage does not take into account whether a particular generation better enables the model to align exploration and exploitation within a set. A generation does not get a score that depends on how the other generations may perform.</li>
+            </ul>
+        </div>
     </div>
 </div>
 
