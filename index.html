@@ -329,6 +329,14 @@
             color: #666 !important;
             font-style: italic;
         }
+        .paper-link {
+            color: #F1F7FF;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .paper-link:hover {
+            color: #ffffff;
+        }
         .desc-two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -396,7 +404,7 @@
 <div class="description-section">
     <div class="desc-label">About this visualization</div>
     <p class="desc-full-width">
-        This visualization compares <strong>Set Reinforcement Learning (Set RL)</strong> and
+        This visualization compares <strong><a href="https://arxiv.org/abs/2509.25424" target="_blank" class="paper-link">Set Reinforcement Learning (Set RL)</a></strong> and
         <strong>Standard RL</strong> as two frameworks with objectives that aim to address the
         exploration–exploitation tradeoff during training. The central quantity we plot is the
         <strong>advantage</strong> assigned to a fixed generation <em>y</em> under each framework —
@@ -404,7 +412,7 @@
         values mean it loses it.
     </p>
     <p class="desc-full-width">
-        In <strong>Set RL</strong>, this is the <em>marginal advantage</em>:
+        In <strong><a href="https://arxiv.org/abs/2509.25424" target="_blank" class="paper-link">Set RL</a></strong>, this is the <em>marginal advantage</em>:
         a measure of the expected score of all sets containing <em>y</em>, minus the average score of
         all sets. In <strong>Standard RL</strong>, this is the classical <em>advantage</em>: the score
         of <em>y</em> itself minus the average score of all generations. The key conceptual difference
