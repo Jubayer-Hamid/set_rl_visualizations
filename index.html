@@ -153,9 +153,13 @@
             margin-bottom: 9px;
         }
         .slider-name {
-            font-family: 'Courier New', monospace;
+            font-family: 'Georgia', serif;
             font-size: 0.80rem;
             color: #bbb;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
         }
         .slider-val {
             font-family: 'Courier New', monospace;
@@ -413,9 +417,9 @@
 </div>
 
 <div class="axis-legend">
-    <div class="axis-item"><div class="axis-dot dot-x"></div><span>x: p = &Eopf;<sub>Y</sub>[r(x,Y)] &mdash; average reward of &pi;</span></div>
-    <div class="axis-item"><div class="axis-dot dot-y"></div><span>y: d(y) = &Eopf;<sub>Y<sub>2:n</sub></sub>[d(x,y,Y<sub>2:n</sub>)] &mdash; diversity contribution of y</span></div>
-    <div class="axis-item"><div class="axis-dot dot-z"></div><span>z: Advantage &mdash; red &gt; 0 means y gains probability mass</span></div>
+    <div class="axis-item"><div class="axis-dot dot-x"></div><span>x: <span id="kleg-p"></span> &mdash; average reward of &pi;</span></div>
+    <div class="axis-item"><div class="axis-dot dot-y"></div><span>y: <span id="kleg-dy"></span> &mdash; diversity contribution of y</span></div>
+    <div class="axis-item"><div class="axis-dot dot-z"></div><span>z: Advantage &mdash; blue &gt; 0 means y gains probability mass</span></div>
     <div class="axis-item"><div class="axis-dot dot-zero"></div><span>Translucent plane at z = 0</span></div>
     <div class="axis-item"><div class="axis-dot" style="background:#ff7700;"></div><span>Orange line: zero-advantage boundary (advantage = 0)</span></div>
 </div>
@@ -429,7 +433,7 @@
 
         <div class="slider-card both-card">
             <div class="slider-top">
-                <span class="slider-name">r(x,&thinsp;y) &mdash; reward of y <span class="tag tag-both">both</span></span>
+                <span class="slider-name"><span id="ksl-ry"></span> &mdash; reward of y <span class="tag tag-both">both</span></span>
                 <span class="slider-val" id="val-ry">0.00</span>
             </div>
             <input type="range" id="slider-ry" min="0" max="1" step="0.01" value="0">
@@ -441,7 +445,7 @@
 
         <div class="slider-card both-card">
             <div class="slider-top">
-                <span class="slider-name">d = &Eopf;<sub>Y<sub>1:n</sub></sub>[d(x,Y<sub>1:n</sub>)] <span class="tag tag-both">both</span></span>
+                <span class="slider-name"><span id="ksl-d"></span> <span class="tag tag-both">both</span></span>
                 <span class="slider-val" id="val-d">0.50</span>
             </div>
             <input type="range" id="slider-d" min="0" max="1" step="0.01" value="0.5">
@@ -462,7 +466,7 @@
 
             <div class="slider-card set-card">
                 <div class="slider-top">
-                    <span class="slider-name">Cov(y) = Cov<sub>Y<sub>2:n</sub></sub>(r(x,Y<sub>2</sub>),&thinsp;d(x,y,Y<sub>2:n</sub>)) <span class="tag tag-set">set-RL</span></span>
+                    <span class="slider-name"><span id="ksl-covy"></span> <span class="tag tag-set">set-RL</span></span>
                     <span class="slider-val" id="val-covB">+0.500</span>
                 </div>
                 <input type="range" id="slider-covB" min="-0.5" max="0.5" step="0.005" value="0.5">
@@ -475,7 +479,7 @@
 
             <div class="slider-card set-card">
                 <div class="slider-top">
-                    <span class="slider-name">Cov<sub>1:n</sub> = Cov<sub>Y<sub>1:n</sub></sub>(r(x,Y<sub>1</sub>),&thinsp;d(x,Y<sub>1:n</sub>)) <span class="tag tag-set">set-RL</span></span>
+                    <span class="slider-name"><span id="ksl-cov1n"></span> <span class="tag tag-set">set-RL</span></span>
                     <span class="slider-val" id="val-cov1n">0.00</span>
                 </div>
                 <input type="range" id="slider-cov1n" min="-0.25" max="0.25" step="0.005" value="0">
@@ -493,7 +497,7 @@
 
             <div class="slider-card std-card">
                 <div class="slider-top">
-                    <span class="slider-name">&lambda; &mdash; diversity bonus weight <span class="tag tag-std">std-RL</span></span>
+                    <span class="slider-name"><span id="ksl-lambda"></span> &mdash; diversity bonus weight <span class="tag tag-std">std-RL</span></span>
                     <span class="slider-val" id="val-lambda">1.00</span>
                 </div>
                 <input type="range" id="slider-lambda" min="0" max="4" step="0.05" value="1">
@@ -541,17 +545,18 @@ function buildZ(fn, args) {
 
 // ── Colorscale: blue → white → red, symmetric around 0 ─────────────────────
 const CS = [
-    [0.0,  '#1a3a8a'],
-    [0.25, '#4466aa'],
-    [0.45, '#99aabb'],
-    [0.5,  '#f0f0f0'],
-    [0.55, '#bb9988'],
-    [0.75, '#aa5544'],
-    [1.0,  '#881a1a'],
+    [0.0,  '#cc0000'],
+    [0.3,  '#e84444'],
+    [0.47, '#f9cccc'],
+    [0.5,  '#ffffff'],
+    [0.53, '#ccd4f9'],
+    [0.7,  '#3355ee'],
+    [1.0,  '#0022cc'],
 ];
 
 // ── Layout (shared between plots) ───────────────────────────────────────────
-function makeLayout() {
+function makeLayout(cameraEye) {
+    const eye = cameraEye || { x: 1.6, y: -1.6, z: 0.9 };
     return {
         paper_bgcolor: '#12121a',
         plot_bgcolor:  '#12121a',
@@ -584,7 +589,7 @@ function makeLayout() {
                 gridcolor: '#1e1e2e',
                 zerolinecolor: '#888',
             },
-            camera: { eye: { x: 1.6, y: -1.6, z: 0.9 } },
+            camera: { eye },
         },
         font: { color: '#ccc' },
         showlegend: false,
@@ -781,7 +786,8 @@ function render() {
     const z_set = buildZ(setRL, [ry, d, covB, cov1n]);
     const z_std = buildZ(stdRL, [ry, d, lambda]);
 
-    const layout = makeLayout();
+    const layout_set = makeLayout({ x: 1.6, y: -1.6, z: 0.9 });
+    const layout_std = makeLayout({ x: 2.2, y: -2.2, z: 1.3 });
 
     const contour_set = zeroContourTrace(z_set);
     const contour_std = zeroContourTrace(z_std);
@@ -792,12 +798,12 @@ function render() {
                         ...(contour_std ? [contour_std] : [])];
 
     if (!initialized) {
-        Plotly.newPlot('plot-set', traces_set, layout, { responsive: true, displayModeBar: false });
-        Plotly.newPlot('plot-std', traces_std, layout, { responsive: true, displayModeBar: false });
+        Plotly.newPlot('plot-set', traces_set, layout_set, { responsive: true, displayModeBar: false });
+        Plotly.newPlot('plot-std', traces_std, layout_std, { responsive: true, displayModeBar: false });
         initialized = true;
     } else {
-        Plotly.react('plot-set', traces_set, layout);
-        Plotly.react('plot-std', traces_std, layout);
+        Plotly.react('plot-set', traces_set, layout_set);
+        Plotly.react('plot-std', traces_std, layout_std);
     }
 }
 
@@ -859,6 +865,24 @@ katex.render(String.raw`
 equalizeLatexHeaders();
 
 window.addEventListener('resize', equalizeLatexHeaders);
+
+// ── Inline KaTeX for slider labels & axis legend ──────────────────────────────
+const OPT_INLINE = { throwOnError: false, displayMode: false };
+
+katex.render(String.raw`r(x,\,y)`,
+    document.getElementById('ksl-ry'), OPT_INLINE);
+katex.render(String.raw`d = \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})]`,
+    document.getElementById('ksl-d'), OPT_INLINE);
+katex.render(String.raw`\mathrm{Cov}(y) = \mathrm{Cov}_{Y_{2:n}}(r(x,Y_2),\,d(x,y,Y_{2:n}))`,
+    document.getElementById('ksl-covy'), OPT_INLINE);
+katex.render(String.raw`\mathrm{Cov}_{1:n} = \mathrm{Cov}_{Y_{1:n}}(r(x,Y_1),\,d(x,Y_{1:n}))`,
+    document.getElementById('ksl-cov1n'), OPT_INLINE);
+katex.render(String.raw`\lambda`,
+    document.getElementById('ksl-lambda'), OPT_INLINE);
+katex.render(String.raw`p = \mathbb{E}_Y[r(x,Y)]`,
+    document.getElementById('kleg-p'), OPT_INLINE);
+katex.render(String.raw`d(y) = \mathbb{E}_{Y_{2:n}}[d(x,y,Y_{2:n})]`,
+    document.getElementById('kleg-dy'), OPT_INLINE);
 
 // ── Objectives in description section ────────────────────────────────────────
 katex.render(String.raw`
