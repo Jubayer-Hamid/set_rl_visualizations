@@ -89,11 +89,16 @@
         /* ── Axis legend ── */
         .axis-legend {
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+            flex-direction: column;
+            gap: 8px;
             padding: 14px 52px 0;
             font-size: 0.77rem;
             color: #555;
+        }
+        .axis-legend-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
         }
         .axis-item { display: flex; align-items: center; gap: 7px; }
         .axis-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -453,11 +458,17 @@
 </div>
 
 <div class="axis-legend">
-    <div class="axis-item"><div class="axis-dot dot-x"></div><span>x: <span id="kleg-p"></span> &mdash; average reward of &pi;</span></div>
-    <div class="axis-item"><div class="axis-dot dot-y"></div><span>y: <span id="kleg-dy"></span> &mdash; diversity contribution of y</span></div>
-    <div class="axis-item"><div class="axis-dot dot-z"></div><span>z: Advantage &mdash; blue &gt; 0 means y gains probability mass</span></div>
-    <div class="axis-item"><div class="axis-dot dot-zero"></div><span>Translucent plane at z = 0</span></div>
-    <div class="axis-item"><div class="axis-dot" style="background:#ff7700;"></div><span>Orange line: zero-advantage boundary (advantage = 0)</span></div>
+    <div class="axis-legend-row">
+        <div class="axis-item"><div class="axis-dot dot-x"></div><span>x-axis: <span id="kleg-p"></span> &mdash; average reward of &pi;</span></div>
+        <div class="axis-item"><div class="axis-dot dot-y"></div><span>y-axis: <span id="kleg-dy"></span> &mdash; diversity contribution of y</span></div>
+        <div class="axis-item"><div class="axis-dot dot-z"></div><span>z-axis: Advantage value</span></div>
+    </div>
+    <div class="axis-legend-row">
+        <div class="axis-item"><div class="axis-dot dot-zero"></div><span>Translucent plane at z = 0</span></div>
+        <div class="axis-item"><div class="axis-dot" style="background:#ff7700;"></div><span>Orange line: zero-advantage boundary (advantage = 0)</span></div>
+        <div class="axis-item"><div class="axis-dot" style="background:#0022cc;"></div><span>Blue &gt; 0: y gains probability mass</span></div>
+        <div class="axis-item"><div class="axis-dot" style="background:#cc0000;"></div><span>Red &lt; 0: y loses probability mass</span></div>
+    </div>
 </div>
 
 <div class="controls-section">
