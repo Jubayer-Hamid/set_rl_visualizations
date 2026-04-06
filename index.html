@@ -245,10 +245,59 @@
             margin: 0;
             font-size: 0.9em;
         }
+        /* ── Description section ── */
+        .description-section {
+            padding: 32px 52px 36px;
+            border-bottom: 1px solid #1e1e2e;
+        }
+        .description-section strong { color: #ddd; font-weight: bold; }
+        .description-section em { color: #bbb; font-style: italic; }
+        .desc-label {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #556;
+            margin-bottom: 14px;
+        }
+        .desc-full-width {
+            font-size: 0.9rem;
+            color: #aaa;
+            line-height: 1.85;
+            margin-bottom: 28px;
+        }
+        .desc-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 36px;
+            row-gap: 16px;
+        }
+        .desc-two-col p {
+            font-size: 0.88rem;
+            color: #aaa;
+            line-height: 1.85;
+            margin-top: 0;
+        }
+        .desc-col-label {
+            font-size: 0.72rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #7a9acc;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1e1e2e;
+        }
+        .desc-formula {
+            margin: 4px 0 2px;
+            font-size: 0.85rem;
+        }
+
         @media (max-width: 960px) {
-            .plots-row, .sliders-methods, .latex-section { grid-template-columns: 1fr; }
+            .plots-row, .sliders-methods, .desc-two-col { grid-template-columns: 1fr; }
             .sliders-shared { grid-template-columns: 1fr; }
-            header, .controls-section, .axis-legend { padding-left: 20px; padding-right: 20px; }
+            header, .controls-section, .axis-legend, .description-section { padding-left: 20px; padding-right: 20px; }
             .plots-row { padding-left: 20px; padding-right: 20px; }
         }
     </style>
@@ -258,6 +307,51 @@
 <header>
     <h1>Polychromic Objective with Set RL versus Diversity Bonus with Standard RL</h1>
 </header>
+
+<div class="description-section">
+    <div class="desc-label">About this visualization</div>
+    <p class="desc-full-width">
+        This visualization compares <strong>Set Reinforcement Learning (Set RL)</strong> and
+        <strong>Standard RL</strong> as two frameworks with objectives that aim to address the
+        exploration–exploitation tradeoff during training. The central quantity we plot is the
+        <strong>advantage</strong> assigned to a fixed generation <em>y</em> under each framework —
+        positive values mean <em>y</em> gains probability mass under the next policy update, negative
+        values mean it loses it. In <strong>Set RL</strong>, this is the <em>marginal advantage</em>:
+        a measure of the expected score of all sets containing <em>y</em>, minus the average score of
+        all sets. In <strong>Standard RL</strong>, this is the classical <em>advantage</em>: the score
+        of <em>y</em> itself minus the average score of all generations. The key conceptual difference
+        is that Set RL evaluates generations <em>collectively</em> — all generations within a set are
+        coupled under a shared set score, so each generation's value depends on the others it appears
+        alongside. Standard RL, by contrast, scores each generation in isolation.
+    </p>
+
+    <div class="desc-two-col">
+        <div class="desc-col-label">Set RL with Polychromic Objective</div>
+        <div class="desc-col-label">Standard RL with Diversity Bonus</div>
+
+        <div id="katex-obj-set" class="desc-formula"></div>
+        <div id="katex-obj-std" class="desc-formula"></div>
+
+        <p>
+            The polychromic objective evaluates generations through the lens of the sets they belong to.
+            This leads to two distinctive properties. First, it can increase the probability of
+            <strong>exploratory but failed generations</strong> — even when <em>r(y) = 0</em>, a generation
+            that meaningfully diversifies the set of outputs can receive a positive marginal advantage,
+            provided its diversity contribution <em>d(y)</em> exceeds the baseline by a sufficient margin.
+            Second, the advantage has a <strong>multiplicative structure</strong>: it explicitly rewards
+            generations that help align exploration and exploitation within sets. The higher the model's
+            average reward <em>p</em>, the more it benefits from diverse generations — the two reinforce
+            each other, producing the curved surface in the left plot.
+        </p>
+        <p>
+            The diversity bonus objective treats reward and diversity as independent, additive quantities.
+            A generation's advantage is simply its reward surplus plus a weighted diversity surplus.
+            This produces a flat, tilted plane: the two objectives never interact, and a higher average
+            reward <em>p</em> always works against any low-reward generation, regardless of how much
+            diversity it contributes.
+        </p>
+    </div>
+</div>
 
 <div class="plots-row">
     <div class="plot-card">
@@ -362,9 +456,9 @@
             <div class="slider-card std-card">
                 <div class="slider-top">
                     <span class="slider-name">&lambda; &mdash; diversity bonus weight <span class="tag tag-std">std-RL</span></span>
-                    <span class="slider-val" id="val-lambda">0.50</span>
+                    <span class="slider-val" id="val-lambda">1.00</span>
                 </div>
-                <input type="range" id="slider-lambda" min="0" max="4" step="0.05" value="0.5">
+                <input type="range" id="slider-lambda" min="0" max="4" step="0.05" value="1">
                 <div class="slider-desc">
                     Coefficient on the diversity bonus r&#771;(x,y) = r(x,y) + &lambda;&thinsp;&middot;&thinsp;d(x,y).
                     Controls the tilt of the advantage plane along the d(y) axis.
@@ -726,7 +820,23 @@ katex.render(String.raw`
 `, document.getElementById('katex-std-notation'), OPT_DISPLAY);
 
 equalizeLatexHeaders();
+
 window.addEventListener('resize', equalizeLatexHeaders);
+
+// ── Objectives in description section ────────────────────────────────────────
+katex.render(String.raw`
+    f_{\mathrm{poly}}(x,\, y_1, \ldots, y_4)
+    \;=\;
+    \frac{1}{4}\sum_{i=1}^{4} r(x, y_i)
+    \;\cdot\;
+    d(x,\, y_1, \ldots, y_4)
+`, document.getElementById('katex-obj-set'), OPT_DISPLAY);
+
+katex.render(String.raw`
+    f_{\mathrm{std}}(x,\, y)
+    \;=\;
+    r(x,\, y) \;+\; \lambda \cdot d(x,\, y)
+`, document.getElementById('katex-obj-std'), OPT_DISPLAY);
 </script>
 </body>
 </html>
