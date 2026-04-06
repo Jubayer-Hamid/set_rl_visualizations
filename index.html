@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set-RL vs Standard-RL: Advantage Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #0c0c12;
+            color: #ddd;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        header {
+            padding: 36px 52px 28px;
+            border-bottom: 1px solid #222230;
+        }
+        header h1 {
+            font-size: 1.55rem;
+            font-weight: normal;
+            color: #f0f0f0;
+            letter-spacing: 0.3px;
+        }
+        header .meta {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+        header .meta span { margin-right: 18px; }
+
+        /* ── Plots ── */
+        .plots-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            padding: 28px 52px 0;
+        }
+        .plot-card {
+            background: #12121a;
+            border: 1px solid #222230;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .plot-header { padding: 16px 20px 4px; }
+        .plot-title {
+            font-size: 1rem;
+            color: #e0e0e0;
+            font-weight: bold;
+        }
+        .plot-formula {
+            margin-top: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.77rem;
+            color: #6688bb;
+            line-height: 1.6;
+        }
+        .plot-div {
+            width: 100%;
+            height: 480px;
+        }
+
+        /* ── Axis legend ── */
+        .axis-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 14px 52px 0;
+            font-size: 0.77rem;
+            color: #555;
+        }
+        .axis-item { display: flex; align-items: center; gap: 7px; }
+        .axis-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+        .dot-x    { background: #4a88cc; }
+        .dot-y    { background: #66aa66; }
+        .dot-z    { background: #cc8844; }
+        .dot-zero { background: rgba(255,255,255,0.25); border: 1px solid #444; }
+
+        /* ── Controls ── */
+        .controls-section { padding: 24px 52px 28px; }
+        .controls-header {
+            font-size: 0.70rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #444;
+            margin-bottom: 14px;
+        }
+
+        /* shared params */
+        .param-group-label {
+            font-size: 0.68rem;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: #444;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #1e1e2e;
+        }
+        .sliders-shared {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        /* per-method params */
+        .sliders-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+        .method-col { display: flex; flex-direction: column; gap: 14px; }
+
+        .slider-card {
+            background: #14141e;
+            border: 1px solid #222230;
+            border-radius: 6px;
+            padding: 13px 15px;
+        }
+        .slider-card.set-card  { border-left: 2px solid #334488; }
+        .slider-card.std-card  { border-left: 2px solid #663322; }
+        .slider-card.both-card { border-left: 2px solid #224422; }
+
+        .slider-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 9px;
+        }
+        .slider-name {
+            font-family: 'Courier New', monospace;
+            font-size: 0.80rem;
+            color: #bbb;
+        }
+        .slider-val {
+            font-family: 'Courier New', monospace;
+            font-size: 0.86rem;
+            color: #7aa0ee;
+            min-width: 46px;
+            text-align: right;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            accent-color: #4a72cc;
+            cursor: pointer;
+        }
+        .slider-desc {
+            margin-top: 7px;
+            font-size: 0.71rem;
+            color: #555;
+            line-height: 1.55;
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .tag-set  { background: #1a2a40; color: #6699cc; border: 1px solid #2a3a50; }
+        .tag-std  { background: #2a1a18; color: #cc7766; border: 1px solid #3a2a28; }
+        .tag-both { background: #1a2a1a; color: #66aa66; border: 1px solid #2a3a2a; }
+
+        /* ── Insight cards ── */
+        .insight-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            padding: 0 52px 44px;
+        }
+        .insight-card {
+            background: #12121a;
+            border: 1px solid #222230;
+            border-radius: 8px;
+            padding: 22px 24px;
+        }
+        .insight-card h3 {
+            font-size: 0.86rem;
+            font-weight: bold;
+            color: #aaa;
+            letter-spacing: 0.4px;
+            margin-bottom: 12px;
+        }
+        .formula-block {
+            background: #0a0a10;
+            border: 1px solid #222230;
+            border-left: 3px solid #334488;
+            border-radius: 4px;
+            padding: 11px 13px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            color: #99aacc;
+            line-height: 1.75;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .insight-card p {
+            font-size: 0.80rem;
+            color: #777;
+            line-height: 1.75;
+            margin-top: 10px;
+        }
+        .hl  { color: #f0c060; }
+        .hlg { color: #70cc90; }
+        .hlr { color: #cc7060; }
+        .mono { font-family: 'Courier New', monospace; font-size: 0.84em; }
+
+        /* ── LaTeX formula section ── */
+        .latex-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            padding: 0 52px 48px;
+        }
+        .latex-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 28px 32px 24px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+        }
+        .latex-card-title {
+            font-size: 0.82rem;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 0.3px;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            font-family: 'Georgia', serif;
+        }
+        .latex-n {
+            font-weight: normal;
+            color: #888;
+            font-size: 0.78rem;
+        }
+        .katex-display-block {
+            overflow-x: auto;
+            padding: 8px 0 12px;
+        }
+        .katex-display-block .katex-display {
+            margin: 0;
+        }
+        .katex-notation {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+            overflow-x: auto;
+        }
+        .katex-notation .katex-display {
+            margin: 0;
+            font-size: 0.9em;
+        }
+        .latex-card .katex { color: #000 !important; }
+        .latex-card .katex * { color: #000 !important; }
+
+        @media (max-width: 960px) {
+            .plots-row, .sliders-methods, .latex-section { grid-template-columns: 1fr; }
+            .sliders-shared { grid-template-columns: 1fr; }
+            header, .controls-section, .latex-section, .axis-legend { padding-left: 20px; padding-right: 20px; }
+            .plots-row { padding-left: 20px; padding-right: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Set-RL vs Standard-RL &mdash; Marginal Advantage Landscape</h1>
+</header>
+
+<div class="plots-row">
+    <div class="plot-card">
+        <div class="plot-header">
+            <div class="plot-title">Set-RL &mdash; Polychromic Marginal Advantage</div>
+            <div class="plot-formula">A<sub>set</sub> = (¼·r(y) + ¾·p)·d(y) &minus; p·d
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ ¾·Cov(y) &minus; Cov<sub>1:n</sub></div>
+        </div>
+        <div id="plot-set" class="plot-div"></div>
+    </div>
+    <div class="plot-card">
+        <div class="plot-header">
+            <div class="plot-title">Standard-RL &mdash; Advantage with Diversity Bonus</div>
+            <div class="plot-formula">A<sub>std</sub> = r(y) &minus; p + &lambda;&thinsp;·&thinsp;(d(y) &minus; d)
+&nbsp;
+&nbsp;</div>
+        </div>
+        <div id="plot-std" class="plot-div"></div>
+    </div>
+</div>
+
+<div class="axis-legend">
+    <div class="axis-item"><div class="axis-dot dot-x"></div><span>x: p = &Eopf;<sub>Y</sub>[r(x,Y)] &mdash; average reward of &pi;</span></div>
+    <div class="axis-item"><div class="axis-dot dot-y"></div><span>y: d(y) = &Eopf;<sub>Y<sub>2:n</sub></sub>[d(x,y,Y<sub>2:n</sub>)] &mdash; diversity contribution of y</span></div>
+    <div class="axis-item"><div class="axis-dot dot-z"></div><span>z: Advantage &mdash; red &gt; 0 means y gains probability mass</span></div>
+    <div class="axis-item"><div class="axis-dot dot-zero"></div><span>Translucent plane at z = 0</span></div>
+    <div class="axis-item"><div class="axis-dot" style="background:#ff7700;"></div><span>Orange line: zero-advantage boundary (advantage = 0)</span></div>
+</div>
+
+<div class="controls-section">
+    <div class="controls-header">Hyperparameters</div>
+
+    <!-- Shared params (appear in both advantages) -->
+    <div class="param-group-label">Shared &mdash; appear in both formulas</div>
+    <div class="sliders-shared">
+
+        <div class="slider-card both-card">
+            <div class="slider-top">
+                <span class="slider-name">r(x,&thinsp;y) &mdash; reward of y <span class="tag tag-both">both</span></span>
+                <span class="slider-val" id="val-ry">0.00</span>
+            </div>
+            <input type="range" id="slider-ry" min="0" max="1" step="0.01" value="0">
+            <div class="slider-desc">
+                The reward of the specific generation y we are tracking.
+                Set r(y)&thinsp;=&thinsp;0 to study the key case from the paper: can a zero-reward generation still gain probability mass?
+            </div>
+        </div>
+
+        <div class="slider-card both-card">
+            <div class="slider-top">
+                <span class="slider-name">d = &Eopf;<sub>Y<sub>1:n</sub></sub>[d(x,Y<sub>1:n</sub>)] <span class="tag tag-both">both</span></span>
+                <span class="slider-val" id="val-d">0.50</span>
+            </div>
+            <input type="range" id="slider-d" min="0" max="1" step="0.01" value="0.5">
+            <div class="slider-desc">
+                Expected diversity of a completely random set drawn from &pi;.
+                In standard-RL this equals &Eopf;<sub>Y</sub>[d(x,Y)] by iterated expectation (same diversity notion).
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Per-method params -->
+    <div class="param-group-label">Method-specific</div>
+    <div class="sliders-methods">
+
+        <!-- Set-RL column -->
+        <div class="method-col">
+
+            <div class="slider-card set-card">
+                <div class="slider-top">
+                    <span class="slider-name">Cov(y) = Cov<sub>Y<sub>2:n</sub></sub>(r(x,Y<sub>2</sub>),&thinsp;d(x,y,Y<sub>2:n</sub>)) <span class="tag tag-set">set-RL</span></span>
+                    <span class="slider-val" id="val-covB">+0.500</span>
+                </div>
+                <input type="range" id="slider-covB" min="-0.5" max="0.5" step="0.005" value="0.5">
+                <div class="slider-desc">
+                    How much does the reward of Y<sub>2</sub> co-vary with the diversity of the set {y, Y<sub>2</sub>,&hellip;,Y<sub>n</sub>}?
+                    Enters the advantage as +&thinsp;¾&thinsp;&middot;&thinsp;Cov(y).
+                    Bounded in [&minus;0.25,&thinsp;0.25] since both variables lie in [0,1].
+                </div>
+            </div>
+
+            <div class="slider-card set-card">
+                <div class="slider-top">
+                    <span class="slider-name">Cov<sub>1:n</sub> = Cov<sub>Y<sub>1:n</sub></sub>(r(x,Y<sub>1</sub>),&thinsp;d(x,Y<sub>1:n</sub>)) <span class="tag tag-set">set-RL</span></span>
+                    <span class="slider-val" id="val-cov1n">0.00</span>
+                </div>
+                <input type="range" id="slider-cov1n" min="-0.25" max="0.25" step="0.005" value="0">
+                <div class="slider-desc">
+                    How much does the reward of Y<sub>1</sub> co-vary with the diversity of a fully random set {Y<sub>1</sub>,&hellip;,Y<sub>n</sub>}?
+                    Enters the advantage as &minus;&thinsp;Cov<sub>1:n</sub>.
+                    Bounded in [&minus;0.25,&thinsp;0.25].
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Standard-RL column -->
+        <div class="method-col">
+
+            <div class="slider-card std-card">
+                <div class="slider-top">
+                    <span class="slider-name">&lambda; &mdash; diversity bonus weight <span class="tag tag-std">std-RL</span></span>
+                    <span class="slider-val" id="val-lambda">0.50</span>
+                </div>
+                <input type="range" id="slider-lambda" min="0" max="4" step="0.05" value="0.5">
+                <div class="slider-desc">
+                    Coefficient on the diversity bonus r&#771;(x,y) = r(x,y) + &lambda;&thinsp;&middot;&thinsp;d(x,y).
+                    Controls the tilt of the advantage plane along the d(y) axis.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<div class="latex-section">
+
+    <div class="latex-card">
+        <div class="latex-card-title">Set-RL &mdash; Polychromic Marginal Advantage &nbsp;<span class="latex-n">(n = 4)</span></div>
+        <div id="katex-set" class="katex-display-block"></div>
+        <div id="katex-set-notation" class="katex-notation"></div>
+    </div>
+
+    <div class="latex-card">
+        <div class="latex-card-title">Standard-RL &mdash; Advantage with Diversity Bonus</div>
+        <div id="katex-std" class="katex-display-block"></div>
+        <div id="katex-std-notation" class="katex-notation"></div>
+    </div>
+
+</div>
+
+<script>
+const N = 4;
+const STEPS = 55;
+
+function linspace(a, b, n) {
+    return Array.from({length: n}, (_, i) => a + (b - a) * i / (n - 1));
+}
+
+const p_vals  = linspace(0, 1, STEPS);
+const dy_vals = linspace(0, 1, STEPS);
+
+// ── Advantage functions ──────────────────────────────────────────────────────
+// Set-RL marginal advantage (n=4, covariance terms explicit):
+//   A_set = (1/4·ry + 3/4·p)·dy  −  p·d  +  3/4·covB  −  cov1n
+function setRL(p, dy, ry, d, covB, cov1n) {
+    return (1/N * ry + (N-1)/N * p) * dy - p * d + (N-1)/N * covB - cov1n;
+}
+
+// Standard-RL advantage with diversity bonus:
+//   A_std = ry − p  +  λ·(dy − d)
+// (𝔼_Y[d(x,Y)] = d by iterated expectation when same diversity notion is used)
+function stdRL(p, dy, ry, d, lambda) {
+    return ry - p + lambda * (dy - d);
+}
+
+// ── Build z matrix [dy-index][p-index] ──────────────────────────────────────
+function buildZ(fn, args) {
+    return dy_vals.map(dy => p_vals.map(p => fn(p, dy, ...args)));
+}
+
+// ── Colorscale: blue → white → red, symmetric around 0 ─────────────────────
+const CS = [
+    [0.0,  '#1a3a8a'],
+    [0.25, '#4466aa'],
+    [0.45, '#99aabb'],
+    [0.5,  '#f0f0f0'],
+    [0.55, '#bb9988'],
+    [0.75, '#aa5544'],
+    [1.0,  '#881a1a'],
+];
+
+// ── Layout (shared between plots) ───────────────────────────────────────────
+function makeLayout() {
+    return {
+        paper_bgcolor: '#12121a',
+        plot_bgcolor:  '#12121a',
+        margin: { l: 0, r: 0, t: 14, b: 0 },
+        scene: {
+            bgcolor: '#0e0e16',
+            xaxis: {
+                title: { text: 'p  (avg reward)', font: { color: '#7a9acc', size: 11 } },
+                tickfont: { color: '#556688', size: 10 },
+                gridcolor: '#1e1e2e',
+                zerolinecolor: '#333344',
+                range: [0, 1],
+                tickvals: [0, 0.25, 0.5, 0.75, 1.0],
+                tick0: 0,
+                dtick: 0.25,
+            },
+            yaxis: {
+                title: { text: 'd(y)  (diversity of y)', font: { color: '#7aaa7a', size: 11 } },
+                tickfont: { color: '#556688', size: 10 },
+                gridcolor: '#1e1e2e',
+                zerolinecolor: '#333344',
+                range: [0, 1],
+                tickvals: [0, 0.25, 0.5, 0.75, 1.0],
+                tick0: 0,
+                dtick: 0.25,
+            },
+            zaxis: {
+                title: { text: 'Advantage', font: { color: '#cc9955', size: 11 } },
+                tickfont: { color: '#556688', size: 10 },
+                gridcolor: '#1e1e2e',
+                zerolinecolor: '#888',
+            },
+            camera: { eye: { x: 1.6, y: -1.6, z: 0.9 } },
+        },
+        font: { color: '#ccc' },
+        showlegend: false,
+    };
+}
+
+// ── Translucent z=0 reference plane ─────────────────────────────────────────
+function zeroPlane() {
+    return {
+        type: 'surface',
+        x: [0, 1],
+        y: [0, 1],
+        z: [[0, 0], [0, 0]],
+        colorscale: [[0, 'rgba(200,210,255,0.15)'], [1, 'rgba(200,210,255,0.15)']],
+        showscale: false,
+        opacity: 1,
+        hoverinfo: 'skip',
+        lighting: { ambient: 1, diffuse: 0, specular: 0, roughness: 1 },
+    };
+}
+
+// ── Zero-contour line on the z=0 plane ───────────────────────────────────────
+// Finds all (p, dy) grid-edge crossings where z changes sign, then orders
+// them via nearest-neighbour so Plotly draws a connected path.
+
+function findZeroContourPts(z_matrix) {
+    const ni = dy_vals.length;
+    const nj = p_vals.length;
+    const pts = [];
+
+    // Row crossings: fixed dy[i], scan across p
+    for (let i = 0; i < ni; i++) {
+        for (let j = 0; j < nj - 1; j++) {
+            const z0 = z_matrix[i][j];
+            const z1 = z_matrix[i][j + 1];
+            if (isFinite(z0) && isFinite(z1) && (z0 < 0) !== (z1 < 0)) {
+                const t = z0 / (z0 - z1);
+                pts.push([p_vals[j] + t * (p_vals[j + 1] - p_vals[j]), dy_vals[i]]);
+            }
+        }
+    }
+
+    // Column crossings: fixed p[j], scan across dy
+    for (let j = 0; j < nj; j++) {
+        for (let i = 0; i < ni - 1; i++) {
+            const z0 = z_matrix[i][j];
+            const z1 = z_matrix[i + 1][j];
+            if (isFinite(z0) && isFinite(z1) && (z0 < 0) !== (z1 < 0)) {
+                const t = z0 / (z0 - z1);
+                pts.push([p_vals[j], dy_vals[i] + t * (dy_vals[i + 1] - dy_vals[i])]);
+            }
+        }
+    }
+
+    return pts;
+}
+
+function nearestNeighbourOrder(pts) {
+    if (pts.length < 2) return pts;
+    const used = new Array(pts.length).fill(false);
+    const result = [pts[0]];
+    used[0] = true;
+    for (let step = 1; step < pts.length; step++) {
+        const [lx, ly] = result[result.length - 1];
+        let minD = Infinity, minI = -1;
+        for (let i = 0; i < pts.length; i++) {
+            if (used[i]) continue;
+            const dx = pts[i][0] - lx, dy = pts[i][1] - ly;
+            const d = dx * dx + dy * dy;
+            if (d < minD) { minD = d; minI = i; }
+        }
+        if (minI === -1) break;
+        result.push(pts[minI]);
+        used[minI] = true;
+    }
+    return result;
+}
+
+function zeroContourTrace(z_matrix) {
+    const pts = findZeroContourPts(z_matrix);
+    if (pts.length < 2) return null;
+    const ordered = nearestNeighbourOrder(pts);
+    return {
+        type: 'scatter3d',
+        mode: 'lines',
+        x: ordered.map(p => p[0]),
+        y: ordered.map(p => p[1]),
+        z: Array(ordered.length).fill(0),
+        line: { color: '#ff7700', width: 8 },
+        hoverinfo: 'skip',
+        showlegend: false,
+    };
+}
+
+// ── Dotted midpoint crosshairs on the z=0 plane ──────────────────────────────
+// Line at p = 0.5 (x fixed, y varies)
+function crosshairX() {
+    const pts = linspace(0, 1, 40);
+    return {
+        type: 'scatter3d',
+        mode: 'lines',
+        x: Array(40).fill(0.5),
+        y: pts,
+        z: Array(40).fill(0),
+        line: { color: '#7a9acc', width: 2, dash: 'dot' },
+        hoverinfo: 'skip',
+        showlegend: false,
+    };
+}
+
+// Line at d(y) = 0.5 (y fixed, x varies)
+function crosshairY() {
+    const pts = linspace(0, 1, 40);
+    return {
+        type: 'scatter3d',
+        mode: 'lines',
+        x: pts,
+        y: Array(40).fill(0.5),
+        z: Array(40).fill(0),
+        line: { color: '#7aaa7a', width: 2, dash: 'dot' },
+        hoverinfo: 'skip',
+        showlegend: false,
+    };
+}
+
+// ── Surface trace ────────────────────────────────────────────────────────────
+function surfaceTrace(z) {
+    const flat   = z.flat();
+    const absMax = Math.max(Math.abs(Math.min(...flat)), Math.abs(Math.max(...flat)), 0.05);
+    return {
+        type: 'surface',
+        x: p_vals,
+        y: dy_vals,
+        z: z,
+        colorscale: CS,
+        cmin: -absMax,
+        cmax:  absMax,
+        cmid:  0,
+        showscale: true,
+        colorbar: {
+            thickness: 13,
+            len: 0.55,
+            x: 1.01,
+            tickfont: { color: '#778899', size: 10 },
+            title: { text: 'Adv', font: { color: '#aaa', size: 10 }, side: 'right' },
+            tickformat: '.2f',
+        },
+        opacity: 0.93,
+        contours: {
+            z: {
+                show: true,
+                start: 0, end: 0, size: 0.001,
+                color: '#ffffff',
+                width: 3,
+                usecolormap: false,
+                project: { z: false },
+            },
+        },
+        hovertemplate:
+            '<b>p</b>: %{x:.3f}<br>' +
+            '<b>d(y)</b>: %{y:.3f}<br>' +
+            '<b>Advantage</b>: %{z:.4f}<extra></extra>',
+    };
+}
+
+// ── Read all slider values ───────────────────────────────────────────────────
+function getParams() {
+    return {
+        ry:     parseFloat(document.getElementById('slider-ry').value),
+        d:      parseFloat(document.getElementById('slider-d').value),
+        lambda: parseFloat(document.getElementById('slider-lambda').value),
+        covB:   parseFloat(document.getElementById('slider-covB').value),
+        cov1n:  parseFloat(document.getElementById('slider-cov1n').value),
+    };
+}
+
+function fmt(v, digits = 2) {
+    const s = Math.abs(v).toFixed(digits);
+    return v < 0 ? '−' + s : v > 0 ? '+' + s : s;
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+let initialized = false;
+
+function render() {
+    const { ry, d, lambda, covB, cov1n } = getParams();
+
+    document.getElementById('val-ry').textContent     = ry.toFixed(2);
+    document.getElementById('val-d').textContent      = d.toFixed(2);
+    document.getElementById('val-lambda').textContent = lambda.toFixed(2);
+    document.getElementById('val-covB').textContent   = fmt(covB, 3);
+    document.getElementById('val-cov1n').textContent  = fmt(cov1n, 3);
+
+    const z_set = buildZ(setRL, [ry, d, covB, cov1n]);
+    const z_std = buildZ(stdRL, [ry, d, lambda]);
+
+    const layout = makeLayout();
+
+    const contour_set = zeroContourTrace(z_set);
+    const contour_std = zeroContourTrace(z_std);
+
+    const traces_set = [surfaceTrace(z_set), zeroPlane(), crosshairX(), crosshairY(),
+                        ...(contour_set ? [contour_set] : [])];
+    const traces_std = [surfaceTrace(z_std), zeroPlane(), crosshairX(), crosshairY(),
+                        ...(contour_std ? [contour_std] : [])];
+
+    if (!initialized) {
+        Plotly.newPlot('plot-set', traces_set, layout, { responsive: true, displayModeBar: false });
+        Plotly.newPlot('plot-std', traces_std, layout, { responsive: true, displayModeBar: false });
+        initialized = true;
+    } else {
+        Plotly.react('plot-set', traces_set, layout);
+        Plotly.react('plot-std', traces_std, layout);
+    }
+}
+
+render();
+
+['slider-ry', 'slider-d', 'slider-lambda', 'slider-covB', 'slider-cov1n'].forEach(id => {
+    document.getElementById(id).addEventListener('input', render);
+});
+
+// ── KaTeX formula rendering ───────────────────────────────────────────────────
+const OPT = { throwOnError: false };
+const OPT_DISPLAY = { throwOnError: false, displayMode: true };
+
+// Set-RL marginal advantage (n=4)
+katex.render(String.raw`
+    A_{\mathrm{marg}}^{\sharp}(x,\, y;\; f_{\mathrm{poly}},\, \theta^k)
+    \;=\;
+    \left(\frac{1}{4}\,r(x,y) \;+\; \frac{3}{4}\,p\right) d(y)
+    \;-\; p\cdot d
+    \;+\; \frac{3}{4}\,\mathrm{Cov}(y)
+    \;-\; \mathrm{Cov}_{1:n}
+`, document.getElementById('katex-set'), OPT_DISPLAY);
+
+katex.render(String.raw`
+    \begin{aligned}
+    &p := \mathbb{E}_Y[r(x,Y)], \quad
+     d(y) := \mathbb{E}_{Y_{2:n}}[d(x,y,Y_{2:n})], \quad
+     d := \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})]\\[4pt]
+    &\mathrm{Cov}(y) := \mathrm{Cov}_{Y_{2:n}}\!\left(r(x,Y_2),\, d(x,y,Y_{2:n})\right), \quad
+     \mathrm{Cov}_{1:n} := \mathrm{Cov}_{Y_{1:n}}\!\left(r(x,Y_1),\, d(x,Y_{1:n})\right)
+    \end{aligned}
+`, document.getElementById('katex-set-notation'), OPT_DISPLAY);
+
+// Standard-RL advantage with diversity bonus
+katex.render(String.raw`
+    A(x,\, y;\; \tilde{r},\, \theta^k)
+    \;=\;
+    r(x,y) - p
+    \;+\;
+    \lambda\,\bigl(d(y) - d\bigr)
+`, document.getElementById('katex-std'), OPT_DISPLAY);
+
+katex.render(String.raw`
+    \tilde{r}(x,y) = r(x,y) + \lambda \cdot d(x,y), \qquad
+    \mathbb{E}_Y[d(x,Y)] = \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})] = d
+    \;\text{(by iterated expectation)}
+`, document.getElementById('katex-std-notation'), OPT_DISPLAY);
+</script>
+</body>
+</html>
