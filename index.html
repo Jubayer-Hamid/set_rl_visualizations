@@ -310,6 +310,11 @@
         }
         .desc-bullets li strong { color: #ddd; }
         .desc-bullets li em { color: #bbb; }
+        .desc-transition {
+            margin-top: 14px !important;
+            font-style: italic;
+            color: #777 !important;
+        }
 
         @media (max-width: 960px) {
             .plots-row, .sliders-methods, .desc-two-col { grid-template-columns: 1fr; }
@@ -366,6 +371,9 @@
                 <li>The standard RL advantage does not take into account whether a particular generation better enables the model to align exploration and exploitation within a set. A generation does not get a score that depends on how the other generations may perform.</li>
             </ul>
         </div>
+
+        <p class="desc-transition">Let us look at the exact equation for the advantage under this framework as shown below:</p>
+        <p class="desc-transition">Let us look at the exact equation for the advantage under this framework as shown below:</p>
     </div>
 </div>
 
@@ -819,7 +827,7 @@ katex.render(String.raw`
 
 // Standard-RL advantage with diversity bonus
 katex.render(String.raw`
-    A(x,\, y;\; \tilde{r},\, \theta^k)
+    A(x,\, y;\; \theta^k)
     \;=\;
     r(x,y) - p
     \;+\;
@@ -828,7 +836,6 @@ katex.render(String.raw`
 
 katex.render(String.raw`
     \begin{aligned}
-    &\tilde{r}(x,y) &&= r(x,y) + \lambda \cdot d(x,y) &&\quad \small\text{augmented reward with diversity bonus}\\[4pt]
     &p &&:= \mathbb{E}_Y[r(x,Y)] &&\quad \small\text{average reward of the model}\\[4pt]
     &d(y) &&:= \mathbb{E}_{Y_{2:n}}[d(x,y,Y_{2:n})] &&\quad \small\text{expected diversity contribution of } y\\[4pt]
     &d &&:= \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})] = \mathbb{E}_Y[d(x,Y)] &&\quad \small\text{expected diversity of a random set}
