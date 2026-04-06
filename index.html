@@ -19,14 +19,24 @@
 
         /* ── Header ── */
         header {
-            padding: 36px 52px 28px;
+            padding: 64px 52px 32px;
             border-bottom: 1px solid #222230;
+            text-align: center;
         }
         header h1 {
             font-size: 1.55rem;
             font-weight: normal;
             color: #f0f0f0;
             letter-spacing: 0.3px;
+            line-height: 1.6;
+        }
+        header h1 .versus {
+            display: block;
+            font-size: 0.85rem;
+            color: #555;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 4px 0;
         }
         header .meta {
             margin-top: 8px;
@@ -327,7 +337,11 @@
 <body>
 
 <header>
-    <h1>Polychromic Objective with Set RL versus Diversity Bonus with Standard RL</h1>
+    <h1>
+        Polychromic Objective with Set RL
+        <span class="versus">versus</span>
+        Diversity Bonus with Standard RL
+    </h1>
 </header>
 
 <div class="description-section">
