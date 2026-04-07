@@ -1030,8 +1030,8 @@ katex.render(String.raw`
     &p &&:= \mathbb{E}_Y[r(x,Y)] &&\quad \small\text{average reward of the model}\\[4pt]
     &d(y) &&:= \mathbb{E}_{Y_{2:n}}[d(x,y,Y_{2:n})] &&\quad \small\text{expected diversity contribution of } y\\[4pt]
     &d &&:= \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})] &&\quad \small\text{expected diversity of a random set}\\[4pt]
-    &\mathrm{Cov}(y) &&:= \mathrm{Cov}_{Y_{2:n}}\!\left(r(x,Y_2),\, d(x,y,Y_{2:n})\right) &&\quad \small\text{reward–diversity covariance for sets containing } y\\[4pt]
-    &\mathrm{Cov}_{1:n} &&:= \mathrm{Cov}_{Y_{1:n}}\!\left(r(x,Y_1),\, d(x,Y_{1:n})\right) &&\quad \small\text{reward–diversity covariance for random sets}
+    &\mathrm{Cov}(y) &&:= \mathrm{Cov}_{Y_{2:n}}\!\left(\frac{1}{n}r(x,y)+\frac{1}{n}\sum_{i=2}^n r(x,Y_i),\, d(x,y,Y_{2:n})\right) &&\quad \small\text{reward–diversity covariance for sets containing } y\\[4pt]
+    &\mathrm{Cov}_{1:n} &&:= \mathrm{Cov}_{Y_{1:n}}\!\left(\frac{1}{n}\sum_{i=1}^n r(x,Y_i),\, d(x,Y_{1:n})\right) &&\quad \small\text{reward–diversity covariance for random sets}
     \end{aligned}
 `, document.getElementById('katex-set-notation'), OPT_DISPLAY);
 
@@ -1063,9 +1063,9 @@ katex.render(String.raw`r(x,\,y)`,
     document.getElementById('ksl-ry'), OPT_INLINE);
 katex.render(String.raw`d = \mathbb{E}_{Y_{1:n}}[d(x,Y_{1:n})]`,
     document.getElementById('ksl-d'), OPT_INLINE);
-katex.render(String.raw`\mathrm{Cov}(y) = \mathrm{Cov}_{Y_{2:n}}(r(x,Y_2),\,d(x,y,Y_{2:n}))`,
+katex.render(String.raw`\mathrm{Cov}(y) = \mathrm{Cov}_{Y_{2:n}}\!\left(\tfrac{1}{n}r(x,y)+\tfrac{1}{n}\sum_{i=2}^n r(x,Y_i),\,d(x,y,Y_{2:n})\right)`,
     document.getElementById('ksl-covy'), OPT_INLINE);
-katex.render(String.raw`\mathrm{Cov}_{1:n} = \mathrm{Cov}_{Y_{1:n}}(r(x,Y_1),\,d(x,Y_{1:n}))`,
+katex.render(String.raw`\mathrm{Cov}_{1:n} = \mathrm{Cov}_{Y_{1:n}}\!\left(\tfrac{1}{n}\sum_{i=1}^n r(x,Y_i),\,d(x,Y_{1:n})\right)`,
     document.getElementById('ksl-cov1n'), OPT_INLINE);
 katex.render(String.raw`\lambda`,
     document.getElementById('ksl-lambda'), OPT_INLINE);
